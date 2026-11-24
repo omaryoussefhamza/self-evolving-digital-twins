@@ -1,0 +1,18 @@
+seeds = [493]
+rounds = 8
+devices = 3
+samples_per_device = 64  # average across devices
+validation_size = 96     # per condition
+test_size = 256          # per condition
+local_epochs = 1
+batch_size = 16
+learning_rate = 0.08
+
+# Used by self_evolution only
+validation_drop = 0.10   # absolute accuracy difference
+practice_examples = 64   # one server-side pass per trigger
+
+# Used by continual only
+memory_capacity = 16     # training examples per device
+replay_per_batch = 4     # maximum remembered examples per ordinary SGD step
+distillation_weight = 0.5
