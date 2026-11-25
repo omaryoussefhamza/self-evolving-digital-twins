@@ -7,7 +7,7 @@ from dataclasses import dataclass
 class Step:
     scenario: str
     condition: str
-    shift: float  # position along the synthetic distribution shift
+    shift: float = 0.0  # used by the synthetic distribution only
 
 
 def schedule(rounds: int) -> list[Step]:

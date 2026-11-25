@@ -1,0 +1,16 @@
+seeds = [493, 494, 495]
+rounds = 18
+devices = 3
+samples_per_device = 300
+validation_size = 1000
+test_size = 10000
+local_epochs = 1
+batch_size = 32
+learning_rate = 0.08
+hidden_size = 64
+proxy_per_digit = 32
+validation_drop = 0.10
+practice_examples = 64
+memory_capacity = 16
+replay_per_batch = 4
+distillation_weight = 0.5

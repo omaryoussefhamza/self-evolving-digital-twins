@@ -17,6 +17,7 @@ class DeviceMemory:
         self.rng = random.Random(f"{seed}/replay/{device}")
         self.entries: list[tuple[Step, torch.Tensor, torch.Tensor]] = []
         self.seen_examples = 0
+        self.writes = 0
         self.last_shard = None
 
     def remember(self, shard: Step, training: TensorDataset):
@@ -34,6 +35,7 @@ class DeviceMemory:
                     continue
             # Clone rows so small exemplars never retain entire shard storage.
             entry = (shard, features.detach().clone(), label.detach().clone())
+            self.writes += 1
             if slot == len(self.entries):
                 self.entries.append(entry)
             else:

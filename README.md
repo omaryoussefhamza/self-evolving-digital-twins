@@ -284,6 +284,154 @@ different test set at each round. Its movement reflects both model changes
 and differences between the test conditions. The original-condition curve
 uses a fixed reference throughout.
 
+### MNIST digit recognition and forgetting
+
+This separate benchmark asks whether a ten-class classifier can learn a new
+group of digits and retain the earlier group. The sequence is **0–4 → 5–9 →
+0–4**, with fresh local images on return. The output head always scores all
+ten digit labels. It receives only the image at prediction time. The smoke
+run uses two rounds per stage and seed 493. The pilot uses six rounds per
+stage and seeds 493, 494 and 495.
+
+Use the existing Python 3.12 environment and the pinned NumPy and PyTorch
+dependencies. From the repository root, download the Keras distribution of
+MNIST once. The loader verifies the archive against the published SHA-256
+before reading its arrays. [MNIST dataset and attribution](https://keras.io/api/datasets/mnist/) ·
+[Archive URL and checksum in the Keras loader](https://github.com/keras-team/keras/blob/master/keras/src/datasets/mnist.py)
+
+```sh
+/usr/bin/time -p curl --fail --location --show-error --silent --create-dirs --output data/mnist/mnist.npz https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
+.venv/bin/python -m unittest discover -s tests -v
+repeat_dir=$(mktemp -d)
+/usr/bin/time -p .venv/bin/python -m cp493.mnist --config configs/mnist_smoke.toml --output "$repeat_dir/smoke"
+.venv/bin/python -m cp493.mnist --config configs/mnist_smoke.toml --output "$repeat_dir/smoke_repeat"
+diff -qr "$repeat_dir/smoke" "$repeat_dir/smoke_repeat"
+/usr/bin/time -p .venv/bin/python -m cp493.mnist --config configs/mnist_pilot.toml --output "$repeat_dir/pilot"
+```
+
+**Data and pairing.** For each seed, a class-stratified permutation of the
+60,000 official training indices allocates 100 validation and 32 server
+practice originals per digit. From the remaining indices, each stage gets 180
+examples per active digit (900 total). A seeded shuffle partitions those 900
+among three devices, 300 each. Shards stay fixed within the stage. The three
+stages use disjoint training indices. Unselected training images are unused.
+All 10,000 official test images are evaluated by digit group. The reference
+set contains all 5,139 test images of 0–4. The second set contains all 4,861
+test images of 5–9. Each round scores every encountered group, including
+5–9 after return. Stage accuracy is conditional on the group of test images.
+
+The runner shares the same split objects and copies the same initialized
+network for all four methods at a given seed. Each pixel is divided by 255.
+The model flattens the 1×28×28 input and uses a 64-unit ReLU layer with ten
+output logits. Each device takes one shuffled epoch of SGD at 0.08 with
+minibatches of up to 32. Each round uses 900 ordinary presentations and 30
+client steps. The server runs the same sample-count-weighted FedAvg,
+validation trigger, local replay, and frozen-teacher loss as in the shared loop.
+
+**Image practice.** A drop of at least ten percentage points in the current
+post-FedAvg validation accuracy relative to the prior round's final validation
+accuracy triggers server practice in the two self-evolution methods. Each
+device supplies ten counts of labels in its current training shard. The server
+samples 64 labels from the aggregate proportions with replacement. For each
+label it chooses a uniformly random labeled parent from its reserved pool
+and translates the image by one pixel up, down, left, or right with a
+zero-filled border. The child keeps its parent's label. The generator uses
+the seed and round solely to seed its random stream. Its data inputs are the
+pool and the reported counts. Each trigger takes two server SGD steps and
+one extra current-condition validation pass. The 320 labeled proxy originals
+are an additional resource available to the practice methods. The 16-slot
+device replay memories admit only their own observed training examples.
+
+**Outputs.** Each directory contains a source-index manifest per seed, one
+JSON file per method and seed, and a per-seed `summary.csv`. The manifest
+identifies each training role by official training indices and every split
+by its ordered index hash and digit counts. The runner audits overlap within
+each official source split. Run files contain the shared initialization hash,
+configuration, all round scores, and separate work counters. Practice
+provenance records every parent training index and translation. Memory
+candidates and reservoir writes are cumulative counts across devices,
+including replacements. Occupancy is a per-device snapshot. Replay
+presentations count student examples, and teacher inference records both
+batch calls and examples scored.
+
+The summary reports stage-end accuracy in percent and middle-stage forgetting
+in percentage points, computed per seed as the positive part of the first
+stage's final original accuracy minus the second stage's final original
+accuracy. After return, the original group has been trained again. Use the
+middle-stage original score to measure retention before that relearning.
+
+### MNIST round-12 and proxy audit
+
+In the archived 18-round pilot, standard FL and self-evolution correctly classified
+**0 of 5,139** original-group images at round 12 for each of seeds 493, 494 and 495.
+At round 6 both methods scored 93.95%, 93.93% and 94.65% respectively on those same
+images. The archive contains round records but no checkpoints. Replaying each run
+through round 12 reproduced every saved field exactly. The audit selected all
+official test rows with true digit 0–4, checked their original pixels and labels,
+and took the largest of all ten output scores for each image. An independent NumPy
+calculation from the layer weights agreed on every prediction. Every winner was a
+digit from 5–9. The zero measures genuine forgetting on this digit-recognition task.
+[Six 10×10 confusion matrices and prediction counts](results/mnist/audit/round12_matrices.txt) ·
+[Predictions by official test index](results/mnist/audit/round12_predictions.csv)
+
+**Source and access.** For each seed, one NumPy generator initialized with
+`[seed, 0]` permutes official training indices separately for each digit, in digit
+order. The first 100 indices per digit go to validation and indices `[100:132]`
+in each permutation go to the server. Client assignments start after these draws.
+This reserves 320 distinct labeled originals, 32 per digit. The audit compared the
+pool with all 2,700 client images across the three stages, all 1,000 validation
+images and all 10,000 official test images. Within each seed there were zero shared
+source images and zero exact 28×28 pixel matches between the pool and these sets.
+Row IDs are scoped to the official split. Smoke and pilot seed 493 have the same
+pool. Assignments change across independent seeds. For example, 14 images in seed
+493's proxy pool are client images in seed 494 and two are validation images there.
+[Official training row IDs by seed and digit, checksums and overlap counts](results/mnist/audit/proxy_origins.json)
+
+Under the archived protocol, standard FL and continual FL used zero proxy images.
+Self-evolution and combined each had access to all 320. Each generated 64 translated
+images and took two server SGD steps at the only trigger. In the smoke run this was
+round 3 with 55 distinct parents. In the pilot it was round 7 with **56, 51 and 55**
+distinct parents for seeds 493, 494 and 495 respectively. Repeated draws count as
+presentations. New benchmark run files include a `proxy_use` object with pool size,
+access, update rounds, distinct parents, generated and plain presentations, and SGD
+steps. The audit supplies these counts separately for each archived run and control.
+[Proxy use by run, method and seed](results/mnist/audit/proxy_usage.csv)
+
+**Comparison with equal proxy exposure.** At each saved validation trigger, a
+standard FL control and a continual FL control received the exact parent images
+used by their respective self-evolution and combined partners. Each control used
+the original pixels in the same order, including repeat draws. The partners
+used the one-pixel translations. All four saw the same parent IDs per seed and
+took the same two SGD steps with identical minibatches of labels and learning rate.
+The audit verified the trigger from the saved validation scores and the parent draws
+from the training-label counts. Test accuracy played no part in either choice.
+
+| Round 12, mean accuracy across three seeds | Original run without proxy | Matched plain parents | Matched translated parents |
+|---|---:|---:|---:|
+| FL on digits 0–4 | 0.00% | 0.00% | 0.00% |
+| FL on digits 5–9 | 87.78% | 87.95% | 87.97% |
+| Continual FL on digits 0–4 | 33.00% | 31.62% | 31.56% |
+| Continual FL on digits 5–9 | 87.73% | 88.01% | 87.92% |
+
+The plain and translated columns isolate the effect of shifting these parents
+at the observed trigger times. For continual FL, the translated images yielded
+lower mean accuracy on both digit groups at round 12 than the plain parents did.
+Comparing either proxy protocol with its original run combines access to labels
+and extra optimization. The three seeds do not establish the separate effects of
+the validation trigger, extra steps or extra labels.
+[Paired stage-end scores and differences for each seed](results/mnist/audit/paired_scores.csv)
+
+To reproduce the six prediction audits and six matched pilot controls from the
+archived results, run the following from the repository root. The audit requires a
+fresh output path.
+
+```sh
+.venv/bin/python -m unittest discover -s tests -p 'test_mnist*.py' -v
+repeat_dir=$(mktemp -d)
+/usr/bin/time -p .venv/bin/python -m cp493.mnist_audit --output "$repeat_dir/audit"
+diff -qr results/mnist/audit "$repeat_dir/audit"
+```
+
 ### Extending the experiment
 
 The loop in `cp493.experiment.records` accepts a dataset factory, a round-training

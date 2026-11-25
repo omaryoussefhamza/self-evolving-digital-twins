@@ -74,10 +74,11 @@ def accuracy(model: torch.nn.Module, data: TensorDataset) -> float:
 
 def records(config: Config, *, method="fedavg", dataset_factory=synthetic_data,
             round_method=train_round, model_factory=classifier, practice_factory=synthetic_practice,
-            detailed_work=False):
+            detailed_work=False, schedule_factory=schedule, practice_from_counts=None,
+            record_memory_work=False, matched_practice_rounds=None):
     if method not in METHODS:
         raise ValueError(f"Unknown method {method!r}")
-    steps = schedule(config.rounds)
+    steps = schedule_factory(config.rounds)
     for seed in config.seeds:
         data = dataset_factory(steps, seed, config.devices, config.samples_per_device,
                                config.validation_size, config.test_size)
@@ -100,13 +101,24 @@ def records(config: Config, *, method="fedavg", dataset_factory=synthetic_data,
                 training_options["replay"] = replay
             loss = round_method(model, clients, **training_options)
             before = accuracy(model, condition.validation)
-            triggered = method in ("self_evolution", "combined") and validation_dropped(
-                reference, before, config.validation_drop
-            )
+            if matched_practice_rounds is None:
+                triggered = method in ("self_evolution", "combined") and validation_dropped(
+                    reference, before, config.validation_drop
+                )
+            else:
+                # A paired control inherits a schedule selected by the reference arm's validation.
+                triggered = number in matched_practice_rounds
             after = before
             extra_examples = extra_steps = 0
+            practice_info = {}
             if triggered:
-                practice = practice_factory(step, seed, number, config.practice_examples)
+                if practice_from_counts is None:
+                    practice = practice_factory(step, seed, number, config.practice_examples)
+                else:
+                    # Each simulated client reports only its label histogram.
+                    counts = sum(torch.bincount(c.tensors[1], minlength=data.classes) for c in clients)
+                    practice, provenance = practice_from_counts(counts, seed, number, config.practice_examples)
+                    practice_info["practice_provenance"] = provenance
                 extra_examples, extra_steps = adapt(model, practice, config.batch_size, config.learning_rate)
                 after = accuracy(model, condition.validation)
             if step.condition not in seen:
@@ -122,6 +134,13 @@ def records(config: Config, *, method="fedavg", dataset_factory=synthetic_data,
                 )
                 if not replay:
                     work.update(replay_presentations=0, teacher_presentations=0, extra_optimizer_steps=extra_steps)
+            if record_memory_work:
+                work.update(
+                    memory_candidates_cumulative=sum(m.seen_examples for m in memories),
+                    memory_writes_cumulative=sum(m.writes for m in memories),
+                    memory_capacity_per_device=config.memory_capacity if memories else 0,
+                    memory_size_by_device=[len(m.entries) for m in memories] if memories else [0] * config.devices,
+                )
             yield {
                 "method": method,
                 "round": number,
@@ -140,6 +159,7 @@ def records(config: Config, *, method="fedavg", dataset_factory=synthetic_data,
                 "current_test_accuracy": scores[step.condition],
                 "test_accuracy_by_condition": scores,
                 **work,
+                **practice_info,
             }
             reference = after
 
