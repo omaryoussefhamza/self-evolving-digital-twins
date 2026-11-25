@@ -26,7 +26,7 @@ The performance evaluation consists of four experimental configurations:
 | **3. FL + Continual Learning** | Federated learning with knowledge retention mechanisms. |
 | **4. Proposed Framework** | Integration of federated learning, self-evolution, and continual learning. |
 
-## Running the three implemented methods
+## Running the four methods
 
 The runnable baseline uses synthetic binary labels, with 0 for normal and 1 for attack.
 The observations are development data. Their accuracy measures performance on the
@@ -43,6 +43,7 @@ python3.12 -m venv .venv
 .venv/bin/python -m cp493.experiment --config configs/smoke.toml --method fedavg --output results/fedavg.jsonl
 .venv/bin/python -m cp493.experiment --config configs/smoke.toml --method self_evolution --output results/self_evolution.jsonl
 .venv/bin/python -m cp493.experiment --config configs/smoke.toml --method continual --output results/continual.jsonl
+.venv/bin/python -m cp493.experiment --config configs/smoke.toml --method combined --output results/combined.jsonl
 ```
 
 The smoke configuration runs three CPU clients for eight rounds with seed 493.
@@ -93,14 +94,14 @@ during ordinary FedAvg, measured before each minibatch update. After all updates
 `test_accuracy_by_condition` records the fraction classified correctly on each
 encountered condition's fixed test set. `current_test_accuracy` is its entry
 for the current condition. Ordinary training receives only client shards.
-All three methods start with identical weights, shard contents, and ordinary
+All four methods start with identical weights, shard contents, and ordinary
 minibatch order for the same seed. Test evaluation is read-only and follows
 the adaptation decision and any resulting update.
 
 ### Validation trigger and practice
 
 After each ordinary FedAvg round, score the server model on the current
-condition's fixed validation set. For `self_evolution`, compare that accuracy
+condition's fixed validation set. For `self_evolution` and `combined`, compare that accuracy
 with the previous round's **final** validation accuracy on that round's
 condition, including any previous adaptation. A drop of at least
 `validation_drop` (0.10 in the smoke configuration, or 10 percentage points)
@@ -164,6 +165,124 @@ replay and distillation of an earlier model's knowledge. This experiment uses
 device-local reservoir sampling and matches binary output probabilities. The
 paper's cross-spectral–spatial feature distillation is specific to hyperspectral
 imagery and outside the scope of this classifier. [Li et al., HyperKD](https://doi.org/10.1109/TGRS.2025.3552449)
+
+### Combined round
+
+The `combined` method uses the same settings as the two individual mechanisms.
+
+1. Freeze a copy of the incoming server model. Each client starts from those
+   same weights and performs its ordinary SGD steps with local replay and
+   distillation. Only that client's observed training shard enters its reservoir.
+2. Aggregate client weights with FedAvg, weighted by current shard size.
+3. Evaluate the aggregated model on the current validation set. Compare this
+   accuracy with the previous round's final validation accuracy. Round 1
+   establishes the reference.
+4. On a drop of at least 10 percentage points in the smoke configuration,
+   generate 64 practice examples and take four server SGD steps. Recheck
+   validation once. The resulting server weights start the next round.
+5. Score the final model on the fixed test set of each encountered condition
+   and write the round record. On return, the current and original scores
+   refer to the same test set.
+
+Each combined row includes the trigger, practice counts, distinct replayed
+examples, and memory occupancy per device. `extra_training_presentations` sums
+student replay and server practice examples. `extra_optimizer_steps` counts
+the extra practice steps. Replay shares the ordinary SGD steps. The row also
+records replay and teacher forward calls in batches, teacher presentations in
+examples, and the extra validation examples scored after practice. These
+inference counts are separate from training presentations.
+
+### Paired synthetic pilot
+
+From the repository root, run the pilot and regenerate its summaries with
+
+```sh
+.venv/bin/python -m unittest discover -s tests -v
+/usr/bin/time -p .venv/bin/python -m cp493.pilot run
+.venv/bin/python -m cp493.pilot summarize
+```
+
+The default configuration is `configs/pilot.toml`. Only the seed list
+(493 through 497) and round count differ from the smoke configuration.
+All four methods use identical initial weights, ordinary shuffle streams,
+client shards and held-out examples within each seed.
+
+| Rounds | Distribution and evaluation |
+| --- | --- |
+| 1–10 | Stable at 0°, evaluated on the original fixed test set. |
+| 11–20 | Sudden jump to 120°, evaluated on original and shifted fixed sets. |
+| 21–30 | One 6° step per round from 114° through 60°. Each angle has its own training shards and fixed validation/test sets. Each round adds its test set to the earlier ones. |
+| 31–40 | Return to 0° with fresh client training shards shared across these ten rounds. The original validation/test sets are reused, and all twelve test sets remain in the record. |
+
+Each `results/pilot/<method>-<seed>.json` contains the method, active seed,
+full pilot configuration and 40 ordered records. These include trigger
+inputs and decisions, practice examples and updates, replay and teacher
+presentations and forward calls, and current, original and all encountered
+test accuracies. Work counts are per round.
+
+`paired_seeds.csv` preserves each seed's checkpoint scores and differences
+from FL on that same seed. `summary.csv` gives their means and sample standard
+deviations as fractions. Checkpoints are rounds 10, 11, 20, 31 and 40.
+The gradual checkpoint first averages rounds 21–30 within each run. Its
+current score therefore spans ten different test conditions, while its original
+score always uses the same set within a seed. The five seeds are the units
+of variation. Scores follow the scheduled training and any triggered practice.
+
+### Evaluating the saved pilot
+
+From the repository root, use the existing environment and the 20 saved run
+files in `results/pilot`. The evaluation command reads the run files, validates
+their identities, round order and test conditions, and writes to `results/evaluation`.
+
+```sh
+.venv/bin/python -m pip install -r requirements-evaluation.txt
+.venv/bin/python -m unittest discover -s tests -v
+.venv/bin/python -m cp493.evaluate_pilot
+```
+
+**Retention and forgetting.** For each method and seed, retention is test
+accuracy on that seed's fixed original test set in every round (1–40).
+Let `A[r]` be that accuracy as a fraction. The reference is the same run's
+`A[10]`. For rounds 11–30 the drop in percentage points is
+`D[r] = 100 × max(0, A[10] − A[r])`. The two run metrics are `D[20]` and
+the maximum of the twenty values `D[11]` through `D[30]`. Both the clamp and
+the maximum are applied within a seed before summarizing across seeds.
+
+**Recovery.** The pilot threshold is 70%. Read the `shifted` test accuracy in
+each record for rounds 11–20. Throughout this stage it equals current-condition
+accuracy and uses the same 256-example test set within each seed. If round
+`r` is the first score at or above 0.70, recovery took `r − 10` completed
+shifted rounds (1–10). A single crossing qualifies. A run that misses the
+threshold is marked **not reached within the shifted stage**. Recovery-time
+means and sample SDs use only observed crossings. The separate
+`recovered_in_stage` indicator (1 or 0) includes all five seeds.
+
+**Extra work.** Sum the recorded practice examples, extra practice SGD steps,
+student replay presentations, teacher batch forward calls, teacher example
+presentations, and extra post-practice validation presentations separately
+over all 40 rounds. A repeated presentation counts each time. Memory capacity
+is the fixed number of training examples one device can retain, with zero for
+methods without a reservoir. Capacity is reported once per run.
+
+| Output in `results/evaluation/` | Contents |
+| --- | --- |
+| `metrics_by_seed.csv` | Forgetting, recovery, and work for each method. |
+| `trajectories_by_seed.csv` | Current and original accuracy (%) by round, plus forgetting (percentage points) in rounds 11–30. |
+| `current_accuracy.png`, `original_accuracy.png`, `forgetting.png` | Four method means with an aligned panel showing between-seed sample SD. Dashed vertical lines mark stage boundaries. |
+| `recovery_and_work.png` | Individual seed observations, means and sample SDs, with separate axes for each unit and a column for missed recoveries. |
+
+Both tables include seeds 493–497 individually, the observed count, the mean,
+and the sample SD (denominator `n − 1`). The `delta_seed_*` columns subtract
+standard FL **in the same seed**. The paired mean and sample SD summarize
+those differences. For recovery time, a pair requires a crossing in both
+runs. Missing differences are blank, as are means with zero observations
+and SDs with fewer than two. Read the recovery times alongside the attainment
+counts because the set of observed seeds can differ between methods.
+
+During rounds 21–30 the current-condition accuracy curve evaluates a
+different test set at each round. Its movement reflects both model changes
+and differences between the test conditions. The original-condition curve
+uses a fixed reference throughout.
 
 ### Extending the experiment
 
