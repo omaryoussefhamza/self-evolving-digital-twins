@@ -227,3 +227,5 @@ __marimo__/
 !/results/combined.jsonl
 !/results/pilot/
 !/results/evaluation/
+!/results/mnist/
+/data/mnist/

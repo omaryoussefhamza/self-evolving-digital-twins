@@ -9,8 +9,9 @@ from torch.utils.data import DataLoader, TensorDataset
 from .continual import ReplayRound
 
 
-def classifier(input_size: int, classes: int) -> nn.Module:
-    return nn.Sequential(nn.Flatten(), nn.Linear(input_size, 8), nn.ReLU(), nn.Linear(8, classes))
+def classifier(input_size: int, classes: int, hidden_size: int = 8) -> nn.Module:
+    return nn.Sequential(nn.Flatten(), nn.Linear(input_size, hidden_size), nn.ReLU(),
+                         nn.Linear(hidden_size, classes))
 
 
 def weighted_average(updates: list[tuple[int, dict[str, torch.Tensor]]]) -> dict[str, torch.Tensor]:

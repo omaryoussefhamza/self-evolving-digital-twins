@@ -1,0 +1,589 @@
+{
+  "benchmark": "MNIST digit recognition",
+  "archive_sha256": "731c5ac602752760c8e48fbffcf8c3b850d9dc2a2aedcf2cc48468fc17b673d1",
+  "split_manifest": "splits-493.json",
+  "initial_weights_sha256": "6129d8e9875c1a5a62155be1c6e444b757c2b235e11653346ad158dc1a92739e",
+  "seed": 493,
+  "method": "self_evolution",
+  "config": {
+    "seeds": [
+      493
+    ],
+    "rounds": 6,
+    "devices": 3,
+    "samples_per_device": 300,
+    "validation_size": 1000,
+    "test_size": 10000,
+    "local_epochs": 1,
+    "batch_size": 32,
+    "learning_rate": 0.08,
+    "validation_drop": 0.1,
+    "practice_examples": 64,
+    "memory_capacity": 16,
+    "replay_per_batch": 4,
+    "distillation_weight": 0.5,
+    "proxy_per_digit": 32,
+    "hidden_size": 64
+  },
+  "records": [
+    {
+      "method": "self_evolution",
+      "round": 1,
+      "scenario": "initial",
+      "condition": "digits_0_4",
+      "seed": 493,
+      "training_loss": 2.030789067480299,
+      "ordinary_examples": 900,
+      "ordinary_steps": 30,
+      "validation_reference": null,
+      "validation_before_adaptation": 0.65,
+      "validation_after_adaptation": 0.65,
+      "adaptation_triggered": false,
+      "adaptation_examples": 0,
+      "adaptation_steps": 0,
+      "current_test_accuracy": 0.6388402412920802,
+      "test_accuracy_by_condition": {
+        "digits_0_4": 0.6388402412920802
+      },
+      "extra_training_presentations": 0,
+      "replay_forward_passes": 0,
+      "teacher_forward_passes": 0,
+      "extra_validation_presentations": 0,
+      "replay_presentations": 0,
+      "teacher_presentations": 0,
+      "extra_optimizer_steps": 0,
+      "memory_candidates_cumulative": 0,
+      "memory_writes_cumulative": 0,
+      "memory_capacity_per_device": 0,
+      "memory_size_by_device": [
+        0,
+        0,
+        0
+      ],
+      "original_test_accuracy": 0.6388402412920802
+    },
+    {
+      "method": "self_evolution",
+      "round": 2,
+      "scenario": "initial",
+      "condition": "digits_0_4",
+      "seed": 493,
+      "training_loss": 1.2758661368158128,
+      "ordinary_examples": 900,
+      "ordinary_steps": 30,
+      "validation_reference": 0.65,
+      "validation_before_adaptation": 0.91,
+      "validation_after_adaptation": 0.91,
+      "adaptation_triggered": false,
+      "adaptation_examples": 0,
+      "adaptation_steps": 0,
+      "current_test_accuracy": 0.9244989297528702,
+      "test_accuracy_by_condition": {
+        "digits_0_4": 0.9244989297528702
+      },
+      "extra_training_presentations": 0,
+      "replay_forward_passes": 0,
+      "teacher_forward_passes": 0,
+      "extra_validation_presentations": 0,
+      "replay_presentations": 0,
+      "teacher_presentations": 0,
+      "extra_optimizer_steps": 0,
+      "memory_candidates_cumulative": 0,
+      "memory_writes_cumulative": 0,
+      "memory_capacity_per_device": 0,
+      "memory_size_by_device": [
+        0,
+        0,
+        0
+      ],
+      "original_test_accuracy": 0.9244989297528702
+    },
+    {
+      "method": "self_evolution",
+      "round": 3,
+      "scenario": "new_digits",
+      "condition": "digits_5_9",
+      "seed": 493,
+      "training_loss": 2.3626239368650648,
+      "ordinary_examples": 900,
+      "ordinary_steps": 30,
+      "validation_reference": 0.91,
+      "validation_before_adaptation": 0.63,
+      "validation_after_adaptation": 0.704,
+      "adaptation_triggered": true,
+      "adaptation_examples": 64,
+      "adaptation_steps": 2,
+      "current_test_accuracy": 0.6924501131454434,
+      "test_accuracy_by_condition": {
+        "digits_0_4": 0.0,
+        "digits_5_9": 0.6924501131454434
+      },
+      "extra_training_presentations": 64,
+      "replay_forward_passes": 0,
+      "teacher_forward_passes": 0,
+      "extra_validation_presentations": 500,
+      "replay_presentations": 0,
+      "teacher_presentations": 0,
+      "extra_optimizer_steps": 2,
+      "memory_candidates_cumulative": 0,
+      "memory_writes_cumulative": 0,
+      "memory_capacity_per_device": 0,
+      "memory_size_by_device": [
+        0,
+        0,
+        0
+      ],
+      "practice_provenance": {
+        "source": "server_proxy_from_official_train",
+        "train_indices": [
+          20982,
+          23420,
+          45616,
+          41024,
+          38149,
+          39180,
+          14895,
+          55764,
+          48647,
+          40872,
+          27953,
+          15768,
+          39180,
+          40149,
+          40981,
+          52321,
+          3583,
+          4282,
+          39112,
+          40358,
+          27491,
+          31881,
+          18576,
+          38074,
+          47915,
+          53306,
+          33466,
+          4282,
+          45616,
+          2593,
+          19473,
+          21510,
+          33059,
+          58303,
+          56411,
+          39180,
+          39920,
+          41463,
+          46477,
+          41527,
+          52266,
+          33524,
+          34137,
+          47260,
+          9807,
+          4282,
+          39195,
+          26094,
+          5119,
+          37152,
+          27740,
+          43420,
+          56663,
+          4967,
+          39180,
+          41024,
+          34569,
+          8286,
+          44165,
+          58303,
+          39180,
+          2622,
+          57219,
+          8352
+        ],
+        "translations_yx": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            -1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            -1,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        "client_label_counts": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          180,
+          180,
+          180,
+          180,
+          180
+        ]
+      },
+      "original_test_accuracy": 0.0
+    },
+    {
+      "method": "self_evolution",
+      "round": 4,
+      "scenario": "new_digits",
+      "condition": "digits_5_9",
+      "seed": 493,
+      "training_loss": 1.2542849686410693,
+      "ordinary_examples": 900,
+      "ordinary_steps": 30,
+      "validation_reference": 0.704,
+      "validation_before_adaptation": 0.824,
+      "validation_after_adaptation": 0.824,
+      "adaptation_triggered": false,
+      "adaptation_examples": 0,
+      "adaptation_steps": 0,
+      "current_test_accuracy": 0.8204073235959679,
+      "test_accuracy_by_condition": {
+        "digits_0_4": 0.0,
+        "digits_5_9": 0.8204073235959679
+      },
+      "extra_training_presentations": 0,
+      "replay_forward_passes": 0,
+      "teacher_forward_passes": 0,
+      "extra_validation_presentations": 0,
+      "replay_presentations": 0,
+      "teacher_presentations": 0,
+      "extra_optimizer_steps": 0,
+      "memory_candidates_cumulative": 0,
+      "memory_writes_cumulative": 0,
+      "memory_capacity_per_device": 0,
+      "memory_size_by_device": [
+        0,
+        0,
+        0
+      ],
+      "original_test_accuracy": 0.0
+    },
+    {
+      "method": "self_evolution",
+      "round": 5,
+      "scenario": "return",
+      "condition": "digits_0_4",
+      "seed": 493,
+      "training_loss": 1.445920273727841,
+      "ordinary_examples": 900,
+      "ordinary_steps": 30,
+      "validation_reference": 0.824,
+      "validation_before_adaptation": 0.904,
+      "validation_after_adaptation": 0.904,
+      "adaptation_triggered": false,
+      "adaptation_examples": 0,
+      "adaptation_steps": 0,
+      "current_test_accuracy": 0.9241097489784005,
+      "test_accuracy_by_condition": {
+        "digits_0_4": 0.9241097489784005,
+        "digits_5_9": 0.0
+      },
+      "extra_training_presentations": 0,
+      "replay_forward_passes": 0,
+      "teacher_forward_passes": 0,
+      "extra_validation_presentations": 0,
+      "replay_presentations": 0,
+      "teacher_presentations": 0,
+      "extra_optimizer_steps": 0,
+      "memory_candidates_cumulative": 0,
+      "memory_writes_cumulative": 0,
+      "memory_capacity_per_device": 0,
+      "memory_size_by_device": [
+        0,
+        0,
+        0
+      ],
+      "original_test_accuracy": 0.9241097489784005
+    },
+    {
+      "method": "self_evolution",
+      "round": 6,
+      "scenario": "return",
+      "condition": "digits_0_4",
+      "seed": 493,
+      "training_loss": 0.5417160591814253,
+      "ordinary_examples": 900,
+      "ordinary_steps": 30,
+      "validation_reference": 0.904,
+      "validation_before_adaptation": 0.924,
+      "validation_after_adaptation": 0.924,
+      "adaptation_triggered": false,
+      "adaptation_examples": 0,
+      "adaptation_steps": 0,
+      "current_test_accuracy": 0.9371473049231368,
+      "test_accuracy_by_condition": {
+        "digits_0_4": 0.9371473049231368,
+        "digits_5_9": 0.0
+      },
+      "extra_training_presentations": 0,
+      "replay_forward_passes": 0,
+      "teacher_forward_passes": 0,
+      "extra_validation_presentations": 0,
+      "replay_presentations": 0,
+      "teacher_presentations": 0,
+      "extra_optimizer_steps": 0,
+      "memory_candidates_cumulative": 0,
+      "memory_writes_cumulative": 0,
+      "memory_capacity_per_device": 0,
+      "memory_size_by_device": [
+        0,
+        0,
+        0
+      ],
+      "original_test_accuracy": 0.9371473049231368
+    }
+  ]
+}
