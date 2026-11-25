@@ -1,0 +1,45 @@
+method,metric,seed_493,seed_494,seed_495,seed_496,seed_497,n_observed,mean,sample_sd,delta_seed_493,delta_seed_494,delta_seed_495,delta_seed_496,delta_seed_497,n_pairs,paired_mean_delta_vs_fl,paired_sample_sd
+fedavg,forgetting_at_20_pp,13.671875,29.296875,31.25,26.5625,25.390625,5,25.234375,6.858778803816865,0.0,0.0,0.0,0.0,0.0,5,0.0,0.0
+self_evolution,forgetting_at_20_pp,17.1875,31.25,33.203125,28.515625,26.5625,5,27.34375,6.219407550035413,3.515625,1.953125,1.953125,1.953125,1.171875,5,2.109375,0.8558164961018221
+continual,forgetting_at_20_pp,9.765625,20.3125,21.484375,16.40625,16.40625,5,16.875,4.583814191158113,-3.90625,-8.984375,-9.765625,-10.15625,-8.984375,5,-8.359375,2.540564459610797
+combined,forgetting_at_20_pp,9.375,23.4375,22.265625,18.75,18.359375,5,18.4375,5.520126969356094,-4.296875,-5.859375,-8.984375,-7.8125,-7.03125,5,-6.796875,1.8028094936272385
+fedavg,max_forgetting_11_30_pp,24.21875,36.71875,32.421875,32.03125,32.421875,5,31.5625,4.533606607016924,0.0,0.0,0.0,0.0,0.0,5,0.0,0.0
+self_evolution,max_forgetting_11_30_pp,26.953125,37.5,33.984375,32.8125,35.546875,5,33.359375,3.9893504474021206,2.734375,0.78125,1.5625,0.78125,3.125,5,1.796875,1.0909562534194486
+continual,max_forgetting_11_30_pp,18.75,30.46875,25.78125,25.390625,27.734375,5,25.625,4.337520825778535,-5.46875,-6.25,-6.640625,-6.640625,-4.6875,5,-5.9375,0.8468548198702656
+combined,max_forgetting_11_30_pp,20.703125,31.640625,27.34375,26.5625,28.90625,5,27.03125,4.034987971442728,-3.515625,-5.078125,-5.078125,-5.46875,-3.515625,5,-4.53125,0.940749576468148
+fedavg,recovery_rounds,not reached within the shifted stage,6,7,8,10,4,7.75,1.707825127659933,,0,0,0,0,4,0,0.0
+self_evolution,recovery_rounds,not reached within the shifted stage,6,5,7,9,4,6.75,1.707825127659933,,0,-2,-1,-1,4,-1,0.816496580927726
+continual,recovery_rounds,not reached within the shifted stage,9,9,not reached within the shifted stage,not reached within the shifted stage,2,9,0.0,,3,2,,,2,2.5,0.7071067811865476
+combined,recovery_rounds,not reached within the shifted stage,8,8,not reached within the shifted stage,not reached within the shifted stage,2,8,0.0,,2,1,,,2,1.5,0.7071067811865476
+fedavg,recovered_in_stage,0,1,1,1,1,5,0.8,0.4472135954999579,0,0,0,0,0,5,0,0.0
+self_evolution,recovered_in_stage,0,1,1,1,1,5,0.8,0.4472135954999579,0,0,0,0,0,5,0,0.0
+continual,recovered_in_stage,0,1,1,0,0,5,0.4,0.5477225575051661,0,0,0,-1,-1,5,-0.4,0.5477225575051661
+combined,recovered_in_stage,0,1,1,0,0,5,0.4,0.5477225575051661,0,0,0,-1,-1,5,-0.4,0.5477225575051661
+fedavg,memory_capacity_per_device,0,0,0,0,0,5,0,0.0,0,0,0,0,0,5,0,0.0
+self_evolution,memory_capacity_per_device,0,0,0,0,0,5,0,0.0,0,0,0,0,0,5,0,0.0
+continual,memory_capacity_per_device,16,16,16,16,16,5,16,0.0,16,16,16,16,16,5,16,0.0
+combined,memory_capacity_per_device,16,16,16,16,16,5,16,0.0,16,16,16,16,16,5,16,0.0
+fedavg,adaptation_examples,0,0,0,0,0,5,0,0.0,0,0,0,0,0,5,0,0.0
+self_evolution,adaptation_examples,128,192,192,128,128,5,153.6,35.05424368033063,128,192,192,128,128,5,153.6,35.05424368033063
+continual,adaptation_examples,0,0,0,0,0,5,0,0.0,0,0,0,0,0,5,0,0.0
+combined,adaptation_examples,128,192,128,128,128,5,140.8,28.621670111997307,128,192,128,128,128,5,140.8,28.621670111997307
+fedavg,adaptation_steps,0,0,0,0,0,5,0,0.0,0,0,0,0,0,5,0,0.0
+self_evolution,adaptation_steps,8,12,12,8,8,5,9.6,2.1908902300206643,8,12,12,8,8,5,9.6,2.1908902300206643
+continual,adaptation_steps,0,0,0,0,0,5,0,0.0,0,0,0,0,0,5,0,0.0
+combined,adaptation_steps,8,12,8,8,8,5,8.8,1.7888543819998317,8,12,8,8,8,5,8.8,1.7888543819998317
+fedavg,replay_presentations,0,0,0,0,0,5,0,0.0,0,0,0,0,0,5,0,0.0
+self_evolution,replay_presentations,0,0,0,0,0,5,0,0.0,0,0,0,0,0,5,0,0.0
+continual,replay_presentations,1440,1440,1440,1440,1440,5,1440,0.0,1440,1440,1440,1440,1440,5,1440,0.0
+combined,replay_presentations,1440,1440,1440,1440,1440,5,1440,0.0,1440,1440,1440,1440,1440,5,1440,0.0
+fedavg,teacher_forward_passes,0,0,0,0,0,5,0,0.0,0,0,0,0,0,5,0,0.0
+self_evolution,teacher_forward_passes,0,0,0,0,0,5,0,0.0,0,0,0,0,0,5,0,0.0
+continual,teacher_forward_passes,360,360,360,360,360,5,360,0.0,360,360,360,360,360,5,360,0.0
+combined,teacher_forward_passes,360,360,360,360,360,5,360,0.0,360,360,360,360,360,5,360,0.0
+fedavg,teacher_presentations,0,0,0,0,0,5,0,0.0,0,0,0,0,0,5,0,0.0
+self_evolution,teacher_presentations,0,0,0,0,0,5,0,0.0,0,0,0,0,0,5,0,0.0
+continual,teacher_presentations,1440,1440,1440,1440,1440,5,1440,0.0,1440,1440,1440,1440,1440,5,1440,0.0
+combined,teacher_presentations,1440,1440,1440,1440,1440,5,1440,0.0,1440,1440,1440,1440,1440,5,1440,0.0
+fedavg,extra_validation_presentations,0,0,0,0,0,5,0,0.0,0,0,0,0,0,5,0,0.0
+self_evolution,extra_validation_presentations,192,288,288,192,192,5,230.4,52.58136552049595,192,288,288,192,192,5,230.4,52.58136552049595
+continual,extra_validation_presentations,0,0,0,0,0,5,0,0.0,0,0,0,0,0,5,0,0.0
+combined,extra_validation_presentations,192,288,192,192,192,5,211.2,42.93250516799596,192,288,192,192,192,5,211.2,42.93250516799596

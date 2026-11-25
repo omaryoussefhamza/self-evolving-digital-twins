@@ -223,4 +223,7 @@ __marimo__/
 .streamlit/secrets.toml
 
 # Local experiment runs
-/results/
+/results/*
+!/results/combined.jsonl
+!/results/pilot/
+!/results/evaluation/

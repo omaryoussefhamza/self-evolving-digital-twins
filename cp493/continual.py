@@ -55,6 +55,8 @@ class ReplayRound:
         self.unique_slots = [set() for _ in memories]
         self.presentations = 0
         self.teacher_presentations = 0
+        self.student_forwards = 0
+        self.teacher_forwards = 0
 
     def local_loss(self, device: int, student: nn.Module, current_ce: torch.Tensor,
                    current_count: int) -> torch.Tensor:
@@ -67,6 +69,7 @@ class ReplayRound:
         features = torch.stack([memory.entries[i][1] for i in slots])
         labels = torch.stack([memory.entries[i][2] for i in slots])
         logits = student(features)
+        self.student_forwards += 1
         replay_ce = F.cross_entropy(logits, labels, reduction="sum")
         supervised = (current_count * current_ce + replay_ce) / (current_count + len(slots))
         if self.weight == 0:
@@ -74,16 +77,17 @@ class ReplayRound:
         with torch.no_grad():
             targets = self.teacher(features).softmax(dim=1)
         self.teacher_presentations += len(slots)
+        self.teacher_forwards += 1
         distillation = F.kl_div(logits.log_softmax(dim=1), targets, reduction="batchmean")
         return supervised + self.weight * distillation
 
-    def metrics(self) -> dict:
+    def metrics(self, *, extra_optimizer_steps: int = 0) -> dict:
         return {
             "memory_capacity_per_device": self.memories[0].capacity,
             "memory_size_by_device": [len(m.entries) for m in self.memories],
             "distinct_replayed_examples": sum(len(s) for s in self.unique_slots),
             "replay_presentations": self.presentations,
             "teacher_presentations": self.teacher_presentations,
-            "extra_optimizer_steps": 0,
+            "extra_optimizer_steps": extra_optimizer_steps,
             "distillation_weight": self.weight,
         }

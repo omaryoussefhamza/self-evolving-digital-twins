@@ -18,7 +18,7 @@ from .fedavg import classifier, train_round
 from .scenario import schedule
 
 
-METHODS = ("fedavg", "self_evolution", "continual")
+METHODS = ("fedavg", "self_evolution", "continual", "combined")
 
 
 @dataclass(frozen=True)
@@ -73,7 +73,8 @@ def accuracy(model: torch.nn.Module, data: TensorDataset) -> float:
 
 
 def records(config: Config, *, method="fedavg", dataset_factory=synthetic_data,
-            round_method=train_round, model_factory=classifier, practice_factory=synthetic_practice):
+            round_method=train_round, model_factory=classifier, practice_factory=synthetic_practice,
+            detailed_work=False):
     if method not in METHODS:
         raise ValueError(f"Unknown method {method!r}")
     steps = schedule(config.rounds)
@@ -86,7 +87,7 @@ def records(config: Config, *, method="fedavg", dataset_factory=synthetic_data,
         seen = []
         reference = None
         memories = []
-        if method == "continual":
+        if method in ("continual", "combined"):
             memories = [DeviceMemory(config.memory_capacity, seed, i) for i in range(config.devices)]
         for number, step in enumerate(steps, start=1):
             condition = data.conditions[step.condition]
@@ -99,7 +100,7 @@ def records(config: Config, *, method="fedavg", dataset_factory=synthetic_data,
                 training_options["replay"] = replay
             loss = round_method(model, clients, **training_options)
             before = accuracy(model, condition.validation)
-            triggered = method == "self_evolution" and validation_dropped(
+            triggered = method in ("self_evolution", "combined") and validation_dropped(
                 reference, before, config.validation_drop
             )
             after = before
@@ -111,6 +112,16 @@ def records(config: Config, *, method="fedavg", dataset_factory=synthetic_data,
             if step.condition not in seen:
                 seen.append(step.condition)
             scores = {name: accuracy(model, data.conditions[name].test) for name in seen}
+            work = replay.metrics(extra_optimizer_steps=extra_steps) if replay else {}
+            if method == "combined" or detailed_work:
+                work.update(
+                    extra_training_presentations=work.get("replay_presentations", 0) + extra_examples,
+                    replay_forward_passes=replay.student_forwards if replay else 0,
+                    teacher_forward_passes=replay.teacher_forwards if replay else 0,
+                    extra_validation_presentations=len(condition.validation) if triggered else 0,
+                )
+                if not replay:
+                    work.update(replay_presentations=0, teacher_presentations=0, extra_optimizer_steps=extra_steps)
             yield {
                 "method": method,
                 "round": number,
@@ -128,7 +139,7 @@ def records(config: Config, *, method="fedavg", dataset_factory=synthetic_data,
                 "adaptation_steps": extra_steps,
                 "current_test_accuracy": scores[step.condition],
                 "test_accuracy_by_condition": scores,
-                **(replay.metrics() if replay else {}),
+                **work,
             }
             reference = after
 
